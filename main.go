@@ -24,22 +24,21 @@ var east = position{1, 0}
 var south = position{0, -1}
 var west = position{-1, 0}
 
+// type positionKey [2]int
+type positionKey position
+
 func uniqueLocations(input string) int {
 	var curr = position{0, 0}
-	// var set = map[position]*struct{}{}
-	var set = map[[2]int]*struct{}{}
-	var marker = &struct{}{}
+	var set = map[positionKey]struct{}{}
 	for _, movement := range input {
 		curr = move(curr, compassToPosition(movement))
-		set[curr.Key()] = marker
+		set[curr.Key()] = struct{}{}
 	}
-	// Is there such a thing as a max map size?
+
 	return len(set)
 }
 
 func move(curr, direction position) position {
-	// curr.x += direction.x
-	// curr.y += direction.y
 	return position{curr.x + direction.x, curr.y + direction.y}
 }
 
@@ -71,6 +70,6 @@ func (p position) String() string {
 	return fmt.Sprintf("{%d, %d}", p.x, p.y)
 }
 
-func (p position) Key() [2]int {
-	return [2]int{p.x, p.y}
+func (p position) Key() positionKey {
+	return positionKey(p)
 }
