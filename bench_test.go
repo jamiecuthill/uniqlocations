@@ -15,7 +15,7 @@ func BenchmarkUniqueLocations(b *testing.B) {
 
 	b.Run("Find Unique Locations", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			uniqueLocations(string(input))
+			uniqueLocationsTree(string(input))
 		}
 	})
 
