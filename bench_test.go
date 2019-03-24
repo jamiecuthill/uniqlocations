@@ -8,17 +8,22 @@ import (
 func BenchmarkUniqueLocations(b *testing.B) {
 	b.StopTimer()
 	var input []byte
-	for n := 0; n < 5000; n++ {
+	for n := 0; n < 8000; n++ {
 		input = append(input, byte(randomDirection()))
 	}
 	b.StartTimer()
 
-	b.Run("Find Unique Locations", func(b *testing.B) {
+	b.Run("Using Set", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			uniqueLocationsSet(string(input))
+		}
+	})
+
+	b.Run("Using Tree", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			uniqueLocationsTree(string(input))
 		}
 	})
-
 }
 
 func randomDirection() rune {

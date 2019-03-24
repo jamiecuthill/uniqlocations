@@ -19,18 +19,32 @@ type position struct {
 	y int
 }
 
-var north = position{0, 1}
-var east = position{1, 0}
-var south = position{0, -1}
-var west = position{-1, 0}
+func (p *position) move(direction rune) {
+	if direction == 'N' {
+		p.y++
+		return
+	}
+	if direction == 'E' {
+		p.x++
+		return
+	}
+	if direction == 'S' {
+		p.y--
+		return
+	}
+	if direction == 'W' {
+		p.x--
+		return
+	}
+}
 
 type positionKey position
 
 func uniqueLocationsSet(input string) int {
 	var curr = position{0, 0}
 	var set = map[positionKey]struct{}{}
-	for _, movement := range input {
-		curr = move(curr, compassToPosition(movement))
+	for _, direction := range input {
+		curr.move(direction)
 		set[curr.Key()] = struct{}{}
 	}
 
@@ -41,63 +55,33 @@ func uniqueLocationsTree(input string) int {
 	curr := &KDNode{X: 0, Y: 0}
 	tree := &KDTree{}
 	for _, direction := range input {
-		curr = moveNode(*curr, direction)
-		// TODO If we know that we only ever change direction by a single value
-		// it might be possible to traverse up the tree by allowing current to point to the node
-		// as it is placed in the tree.
+		curr.moveNode(direction)
 		tree.Append(curr)
 	}
-	return tree.Len()
+	return tree.Len
 }
 
-func moveNode(curr KDNode, direction rune) *KDNode {
-	switch direction {
-	case 'N':
-		fallthrough
-	case 'n':
-		return &KDNode{X: curr.X, Y: curr.Y + 1}
-	case 'E':
-		fallthrough
-	case 'e':
-		return &KDNode{X: curr.X + 1, Y: curr.Y}
-	case 'S':
-		fallthrough
-	case 's':
-		return &KDNode{X: curr.X, Y: curr.Y - 1}
-	case 'W':
-		fallthrough
-	case 'w':
-		return &KDNode{X: curr.X - 1, Y: curr.Y}
-	default:
-		panic("Invalid direction character")
+func (n *KDNode) moveNode(direction rune) {
+	if direction == 'N' {
+		n.Y++
+		return
+	}
+	if direction == 'E' {
+		n.X++
+		return
+	}
+	if direction == 'S' {
+		n.Y--
+		return
+	}
+	if direction == 'W' {
+		n.X--
+		return
 	}
 }
 
 func move(curr, direction position) position {
 	return position{curr.x + direction.x, curr.y + direction.y}
-}
-
-func compassToPosition(in rune) position {
-	switch in {
-	case 'N':
-		fallthrough
-	case 'n':
-		return north
-	case 'E':
-		fallthrough
-	case 'e':
-		return east
-	case 'S':
-		fallthrough
-	case 's':
-		return south
-	case 'W':
-		fallthrough
-	case 'w':
-		return west
-	default:
-		panic("Invalid input character")
-	}
 }
 
 // String for printing in tests
@@ -114,55 +98,32 @@ type KDNode struct {
 	Y     int
 	Left  *KDNode
 	Right *KDNode
-
-	Parent *KDNode
 }
 
-func (n *KDNode) Len() int {
-	var left, right int
-	if n.Left != nil {
-		left = n.Left.Len()
-	}
-	if n.Right != nil {
-		right = n.Right.Len()
-	}
-
-	return 1 + left + right
-}
-
-func (n *KDNode) Append(node *KDNode, depth int) int {
+func (n *KDNode) Append(node *KDNode, x bool, len *int) {
 	if node.X == n.X && node.Y == n.Y {
-		log.Printf("Found duplicate node %s", n)
-		node = n
-		return depth
+		return
 	}
 
-	var nodeValue, thisValue int
-	if depth%2 == 0 {
-		nodeValue = node.X
-		thisValue = n.X
-
-	} else {
-		nodeValue = node.Y
-		thisValue = n.Y
-	}
-	if nodeValue < thisValue {
+	if (x && node.X < n.X) || (!x && node.Y < n.Y) {
 		if n.Left == nil {
-			n.Left = node
-			node.Parent = n
-			return depth
+			n.Left = &KDNode{X: node.X, Y: node.Y}
+			*len++
+			return
 		}
 
-		return n.Left.Append(node, depth+1)
+		n.Left.Append(node, !x, len)
+		return
 	}
 
 	if n.Right == nil {
-		n.Right = node
-		node.Parent = n
-		return depth
+		n.Right = &KDNode{X: node.X, Y: node.Y}
+		*len++
+		return
 	}
 
-	return n.Right.Append(node, depth+1)
+	n.Right.Append(node, !x, len)
+	return
 }
 
 func (n *KDNode) String() string {
@@ -170,38 +131,18 @@ func (n *KDNode) String() string {
 }
 
 type KDTree struct {
-	Root  *KDNode
-	next  *KDNode
-	depth int
+	Root *KDNode
+	Len  int
 }
 
 func (t *KDTree) Append(node *KDNode) {
 	if t.Root == nil {
-		log.Printf("Root is now %s", node)
-		t.Root = node
-		t.next = node
+		t.Root = &KDNode{X: node.X, Y: node.Y}
+		t.Len++
 		return
 	}
 
-	insertedDepth := t.next.Append(node, t.depth)
-	if node.Parent != nil && node.Parent.Parent != nil {
-		log.Printf("Using parent node for next append %s at depth %d", node.Parent.Parent, insertedDepth-1)
-		t.next = node.Parent.Parent
-		t.depth = insertedDepth - 1
-		return
-	}
-
-	log.Printf("Back at root node %s", t.Root)
-	t.next = t.Root
-	t.depth = 0
-}
-
-func (t *KDTree) Len() int {
-	if t.Root == nil {
-		return 0
-	}
-
-	return t.Root.Len()
+	t.Root.Append(node, true, &t.Len)
 }
 
 func (t *KDTree) String() string {
