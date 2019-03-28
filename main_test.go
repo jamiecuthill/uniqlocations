@@ -250,3 +250,17 @@ func TestUniqueLocationsTree2(t *testing.T) {
 		t.Fatalf("Expected length is 9 but was %d", res)
 	}
 }
+
+func TestUniqueLocationsGrid(t *testing.T) {
+	res := uniqueLocationsGrid("NNEESSWW")
+	if res != 8 {
+		t.Fatalf("Expected length is 8 but was %d", res)
+	}
+}
+
+func TestUniqueLocationsGrid2(t *testing.T) {
+	res := uniqueLocationsGrid("NESSWWNNES")
+	if res != 9 {
+		t.Fatalf("Expected length is 9 but was %d", res)
+	}
+}

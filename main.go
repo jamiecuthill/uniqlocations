@@ -103,7 +103,7 @@ func uniqueLocationsTree(input string) int {
 
 func uniqueLocationsGrid(input string) int {
 	var x, y, visited int
-	var world = make(grid)
+	var world = make(mapgrid)
 	for _, direction := range input {
 		move(direction, &x, &y)
 		if world.exists(x, y) {
@@ -115,9 +115,9 @@ func uniqueLocationsGrid(input string) int {
 	return visited
 }
 
-type grid map[int]map[int]struct{}
+type mapgrid map[int]map[int]struct{}
 
-func (g grid) exists(x, y int) bool {
+func (g mapgrid) exists(x, y int) bool {
 	if g == nil {
 		g = make(map[int]map[int]struct{})
 	}
@@ -131,7 +131,7 @@ func (g grid) exists(x, y int) bool {
 	return false
 }
 
-func (g grid) visit(x, y int) {
+func (g mapgrid) visit(x, y int) {
 	if g == nil {
 		g = make(map[int]map[int]struct{})
 	}
