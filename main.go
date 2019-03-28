@@ -101,9 +101,13 @@ func uniqueLocationsTree(input string) int {
 	return tree.Len()
 }
 
+var maxcap int
+
 func uniqueLocationsGrid(input string) int {
 	var x, y, visited int
-	var world = make(mapgrid)
+	maxcap = len(input)
+	var world = newgrid("bitmap")
+
 	for _, direction := range input {
 		move(direction, &x, &y)
 		if world.exists(x, y) {
@@ -112,15 +116,37 @@ func uniqueLocationsGrid(input string) int {
 		visited++
 		world.visit(x, y)
 	}
+
 	return visited
+}
+
+type grid interface {
+	exists(x, y int) bool
+	visit(x, y int)
+}
+
+func newgrid(gridtype string) grid {
+	switch gridtype {
+	case "map":
+		return make(mapgrid)
+	case "array":
+		return make(arraygrid, 0, maxcap)
+	case "compositearray":
+		return &compositearray{
+			pp: make(arraygrid, 0, maxcap),
+			np: make(arraygrid, 0, maxcap),
+			pn: make(arraygrid, 0, maxcap),
+			nn: make(arraygrid, 0, maxcap),
+		}
+	case "bitmap":
+		return make(bitmap)
+	}
+	panic("unknown type")
 }
 
 type mapgrid map[int]map[int]struct{}
 
 func (g mapgrid) exists(x, y int) bool {
-	if g == nil {
-		g = make(map[int]map[int]struct{})
-	}
 	if xx, okx := g[x]; okx {
 		if xx == nil {
 			g[x] = make(map[int]struct{})
@@ -132,13 +158,81 @@ func (g mapgrid) exists(x, y int) bool {
 }
 
 func (g mapgrid) visit(x, y int) {
-	if g == nil {
-		g = make(map[int]map[int]struct{})
-	}
 	if _, ok := g[x]; !ok {
 		g[x] = make(map[int]struct{})
 	}
 	g[x][y] = struct{}{}
+}
+
+type arraygrid [][]bool
+
+func (g arraygrid) exists(x, y int) bool {
+	if x >= len(g) {
+		return false
+	}
+	if y >= len(g[x]) {
+		return false
+	}
+	return g[x][y]
+}
+
+func (g arraygrid) visit(x, y int) {
+	for i := len(g); i <= x; i++ {
+		g = append(g, make([]bool, 0, maxcap))
+	}
+	for j := len(g[x]); j <= y; j++ {
+		g[x] = append(g[x], false)
+	}
+	g[x][y] = true
+}
+
+type compositearray struct {
+	pp, pn, np, nn arraygrid
+}
+
+func (g *compositearray) exists(x, y int) bool {
+	if x >= 0 && y >= 0 {
+		return g.pp.exists(x, y)
+	}
+
+	if x < 0 && y < 0 {
+		return g.nn.exists(-x, -y)
+	}
+
+	if x < 0 && y >= 0 {
+		return g.np.exists(-x, y)
+	}
+
+	return g.pn.exists(x, -y)
+}
+
+func (g *compositearray) visit(x, y int) {
+	if x >= 0 && y >= 0 {
+		g.pp.visit(x, y)
+		return
+	}
+
+	if x < 0 && y < 0 {
+		g.nn.visit(-x, -y)
+		return
+	}
+
+	if x < 0 && y >= 0 {
+		g.np.visit(-x, y)
+		return
+	}
+
+	g.pn.visit(x, -y)
+}
+
+type bitmap map[int]uint64
+
+func (b bitmap) exists(x, y int) bool {
+	return b[x]&(1<<uint(y)) > 0
+}
+
+func (b bitmap) visit(x, y int) {
+	b[x] |= (1 << uint(y))
 }
 
 type ByAxis struct {
