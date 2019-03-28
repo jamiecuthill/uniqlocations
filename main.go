@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 )
+
+var FindUniqueLocations = uniqueLocationsGrid
 
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatalf("Input not provided")
 	}
 	input := os.Args[1]
-	fmt.Println(uniqueLocationsTree(input))
+	fmt.Println(uniqueLocationsGrid(input))
 }
 
 type position struct {
@@ -38,6 +41,25 @@ func (p *position) move(direction rune) {
 	}
 }
 
+func move(direction rune, x *int, y *int) {
+	if direction == 'N' {
+		*y++
+		return
+	}
+	if direction == 'E' {
+		*x++
+		return
+	}
+	if direction == 'S' {
+		*y--
+		return
+	}
+	if direction == 'W' {
+		*x--
+		return
+	}
+}
+
 type positionKey position
 
 func uniqueLocationsSet(input string) int {
@@ -51,14 +73,145 @@ func uniqueLocationsSet(input string) int {
 	return len(set)
 }
 
+type btree struct {
+	root *node
+}
+
+type node struct {
+	key   int
+	value *btree
+	left  *node
+	right *node
+}
+
 func uniqueLocationsTree(input string) int {
-	curr := &KDNode{X: 0, Y: 0}
-	tree := &KDTree{}
+	var x, y int
+	// var points = make([][2]int, 0, len(input))
+	var tree *Node
+
 	for _, direction := range input {
-		curr.moveNode(direction)
-		tree.Append(curr)
+		move(direction, &x, &y)
+		if tree == nil {
+			tree = &Node{location: [2]int{x, y}}
+		} else {
+			tree.Insert([2]int{x, y}, 0)
+		}
 	}
-	return tree.Len
+
+	return tree.Len()
+}
+
+func uniqueLocationsGrid(input string) int {
+	var x, y, visited int
+	var world = make(grid)
+	for _, direction := range input {
+		move(direction, &x, &y)
+		if world.exists(x, y) {
+			continue
+		}
+		visited++
+		world.visit(x, y)
+	}
+	return visited
+}
+
+type grid map[int]map[int]struct{}
+
+func (g grid) exists(x, y int) bool {
+	if g == nil {
+		g = make(map[int]map[int]struct{})
+	}
+	if xx, okx := g[x]; okx {
+		if xx == nil {
+			g[x] = make(map[int]struct{})
+		}
+		_, oky := g[x][y]
+		return oky
+	}
+	return false
+}
+
+func (g grid) visit(x, y int) {
+	if g == nil {
+		g = make(map[int]map[int]struct{})
+	}
+	if _, ok := g[x]; !ok {
+		g[x] = make(map[int]struct{})
+	}
+	g[x][y] = struct{}{}
+}
+
+type ByAxis struct {
+	axis   int
+	points [][2]int
+}
+
+func (a ByAxis) Len() int           { return len(a.points) }
+func (a ByAxis) Swap(i, j int)      { a.points[i], a.points[j] = a.points[j], a.points[i] }
+func (a ByAxis) Less(i, j int) bool { return a.points[i][a.axis] < a.points[j][a.axis] }
+
+func kdtree(points [][2]int, depth int) *Node {
+	if len(points) == 0 {
+		return nil
+	}
+
+	k := len(points[0])
+	axis := depth % k
+
+	sort.Sort(ByAxis{axis, points})
+	median := len(points) / 2
+
+	return &Node{
+		location: points[median],
+		left:     kdtree(points[:median], depth+1),
+		right:    kdtree(points[median+1:], depth+1),
+	}
+}
+
+type Node struct {
+	location    [2]int
+	left, right *Node
+}
+
+func (n *Node) Len() int {
+	if n == nil {
+		return 0
+	}
+
+	var llen, rlen int
+	if n.left != nil {
+		llen = n.left.Len()
+	}
+
+	if n.right != nil {
+		rlen = n.right.Len()
+	}
+
+	return 1 + llen + rlen
+}
+
+func (n *Node) Insert(new [2]int, depth int) {
+	if n.location[0] == new[0] && n.location[1] == new[1] {
+		return
+	}
+
+	k := 2
+	axis := depth % k
+
+	if new[axis] < n.location[axis] {
+		if n.left == nil {
+			n.left = &Node{location: new}
+		} else {
+			n.left.Insert(new, depth+1)
+		}
+		return
+	}
+
+	if n.right == nil {
+		n.right = &Node{location: new}
+	} else {
+		n.right.Insert(new, depth+1)
+	}
 }
 
 func (n *KDNode) moveNode(direction rune) {
@@ -78,10 +231,6 @@ func (n *KDNode) moveNode(direction rune) {
 		n.X--
 		return
 	}
-}
-
-func move(curr, direction position) position {
-	return position{curr.x + direction.x, curr.y + direction.y}
 }
 
 // String for printing in tests

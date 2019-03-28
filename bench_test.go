@@ -11,17 +11,24 @@ func BenchmarkUniqueLocations(b *testing.B) {
 	for n := 0; n < 8000; n++ {
 		input = append(input, byte(randomDirection()))
 	}
+	inputstr := string(input)
 	b.StartTimer()
 
 	b.Run("Using Set", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			uniqueLocationsSet(string(input))
+			uniqueLocationsSet(inputstr)
 		}
 	})
 
 	b.Run("Using Tree", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			uniqueLocationsTree(string(input))
+			uniqueLocationsTree(inputstr)
+		}
+	})
+
+	b.Run("Using Grid", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			uniqueLocationsGrid(inputstr)
 		}
 	})
 }
