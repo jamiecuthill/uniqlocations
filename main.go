@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sort"
 )
@@ -11,7 +10,7 @@ var FindUniqueLocations = uniqueLocationsGrid
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatalf("Input not provided")
+		panic("Input not provided")
 	}
 	input := os.Args[1]
 	fmt.Println(uniqueLocationsGrid(input))
@@ -106,15 +105,15 @@ var maxcap int
 func uniqueLocationsGrid(input string) int {
 	var x, y, visited int
 	maxcap = len(input)
-	var world = newgrid("bitmap")
+	var world = make([][2]uint64, 0, maxcap)
 
 	for _, direction := range input {
 		move(direction, &x, &y)
-		if world.exists(x, y) {
+		if exists(world, x, y) {
 			continue
 		}
 		visited++
-		world.visit(x, y)
+		world = visit(world, x, y)
 	}
 
 	return visited
@@ -144,24 +143,51 @@ func newgrid(gridtype string) grid {
 	panic("unknown type")
 }
 
-type mapgrid map[int]map[int]struct{}
+type mapgrid map[int]struct{}
 
 func (g mapgrid) exists(x, y int) bool {
-	if xx, okx := g[x]; okx {
-		if xx == nil {
-			g[x] = make(map[int]struct{})
-		}
-		_, oky := g[x][y]
-		return oky
-	}
-	return false
+	_, ok := g[x*maxcap+y]
+	return ok
 }
 
 func (g mapgrid) visit(x, y int) {
-	if _, ok := g[x]; !ok {
-		g[x] = make(map[int]struct{})
+	g[x*maxcap+y] = struct{}{}
+}
+
+type bitshift []uint64
+
+func exists(world [][2]uint64, x, y int) bool {
+	position := x*maxcap + y
+
+	i := (position / 62)
+	d := 0
+	if i < 0 {
+		i = i * -1
+		d = 1
 	}
-	g[x][y] = struct{}{}
+
+	if len(world) < i+1 {
+		return false
+	}
+
+	return world[i][d]&(1<<uint(position%62)) > 0
+}
+
+func visit(world [][2]uint64, x, y int) [][2]uint64 {
+	position := x*maxcap + y
+	i := position / 62
+	d := 0
+	if i < 0 {
+		i = i * -1
+		d = 1
+	}
+
+	for j := len(world); j < i+1; j++ {
+		world = append(world, [2]uint64{})
+	}
+
+	world[i][d] |= (1 << uint(position%62))
+	return world
 }
 
 type arraygrid [][]bool

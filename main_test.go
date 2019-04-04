@@ -264,3 +264,10 @@ func TestUniqueLocationsGrid2(t *testing.T) {
 		t.Fatalf("Expected length is 9 but was %d", res)
 	}
 }
+
+func TestUniqueLocationsGrid2Negatives(t *testing.T) {
+	res := uniqueLocationsGrid("WWWWWWWWWWWWWWWWWWWSSEENNNNNWWWWNNSSSS")
+	if res != 35 {
+		t.Fatalf("Expected length is 35 but was %d", res)
+	}
+}
