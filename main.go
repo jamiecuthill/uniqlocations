@@ -158,13 +158,13 @@ type bitshift []uint64
 
 func exists(world [][2]uint64, x, y int) bool {
 	position := x*maxcap + y
-
-	i := (position / 62)
 	d := 0
-	if i < 0 {
-		i = i * -1
+	if position < 0 {
+		position = position * -1
 		d = 1
 	}
+
+	i := (position / 62)
 
 	if len(world) < i+1 {
 		return false
@@ -175,12 +175,13 @@ func exists(world [][2]uint64, x, y int) bool {
 
 func visit(world [][2]uint64, x, y int) [][2]uint64 {
 	position := x*maxcap + y
-	i := position / 62
 	d := 0
-	if i < 0 {
-		i = i * -1
+	if position < 0 {
+		position = position * -1
 		d = 1
 	}
+
+	i := position / 62
 
 	for j := len(world); j < i+1; j++ {
 		world = append(world, [2]uint64{})
