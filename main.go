@@ -2,14 +2,15 @@ package main
 
 const gridsize = 8
 
-var maxcap int
+var maxcap = 20
+
 var FindUniqueLocations = uniqueLocationsGrid
+
+type worldgrid [][][4]uint64
 
 func uniqueLocationsGrid(input string) int {
 	var x, y, visited int
-	// maxcap = (len(input) / gridsize) + 1
-	maxcap = 20
-	var world = make([][][4]uint64, 0, maxcap)
+	var world = make(worldgrid, 0, maxcap)
 
 	for _, direction := range input {
 		move(direction, &x, &y)
@@ -42,7 +43,7 @@ func move(direction rune, x *int, y *int) {
 	}
 }
 
-func exists(world [][][4]uint64, x, y int) bool {
+func exists(world worldgrid, x, y int) bool {
 	d := 0
 	if x < 0 {
 		d++
@@ -68,7 +69,7 @@ func exists(world [][][4]uint64, x, y int) bool {
 	return world[xi][yi][d]&(1<<shift) > 0
 }
 
-func visit(world [][][4]uint64, x, y int) [][][4]uint64 {
+func visit(world worldgrid, x, y int) worldgrid {
 	d := 0
 	if x < 0 {
 		d++
