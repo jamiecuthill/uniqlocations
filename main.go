@@ -1,75 +1,99 @@
 package main
 
-import (
-	"fmt"
-	"log"
-	"os"
-)
+const gridsize = 8
 
-func main() {
-	if len(os.Args) < 2 {
-		log.Fatalf("Input not provided")
-	}
-	input := os.Args[1]
-	fmt.Println(uniqueLocations(input))
-}
+var maxcap = 20
 
-type position struct {
-	x int
-	y int
-}
+var FindUniqueLocations = uniqueLocationsGrid
 
-var north = position{0, 1}
-var east = position{1, 0}
-var south = position{0, -1}
-var west = position{-1, 0}
+type worldgrid [][][4]uint64
 
-// type positionKey [2]int
-type positionKey position
+func uniqueLocationsGrid(input string) int {
+	var x, y, visited int
+	var world = make(worldgrid, 0, maxcap)
 
-func uniqueLocations(input string) int {
-	var curr = position{0, 0}
-	var set = map[positionKey]struct{}{}
-	for _, movement := range input {
-		curr = move(curr, compassToPosition(movement))
-		set[curr.Key()] = struct{}{}
+	for _, direction := range input {
+		move(direction, &x, &y)
+		if exists(world, x, y) {
+			continue
+		}
+		visited++
+		world = visit(world, x, y)
 	}
 
-	return len(set)
+	return visited
 }
 
-func move(curr, direction position) position {
-	return position{curr.x + direction.x, curr.y + direction.y}
-}
-
-func compassToPosition(in rune) position {
-	switch in {
-	case 'N':
-		fallthrough
-	case 'n':
-		return north
-	case 'E':
-		fallthrough
-	case 'e':
-		return east
-	case 'S':
-		fallthrough
-	case 's':
-		return south
-	case 'W':
-		fallthrough
-	case 'w':
-		return west
-	default:
-		panic("Invalid input character")
+func move(direction rune, x *int, y *int) {
+	if direction == 'N' {
+		*y++
+		return
+	}
+	if direction == 'E' {
+		*x++
+		return
+	}
+	if direction == 'S' {
+		*y--
+		return
+	}
+	if direction == 'W' {
+		*x--
+		return
 	}
 }
 
-// String for printing in tests
-func (p position) String() string {
-	return fmt.Sprintf("{%d, %d}", p.x, p.y)
+func exists(world worldgrid, x, y int) bool {
+	d := 0
+	if x < 0 {
+		d++
+		x *= -1
+	}
+	if y < 0 {
+		d += 2
+		y *= -1
+	}
+
+	xi := x / gridsize
+	if len(world) < xi+1 {
+		return false
+	}
+
+	yi := y / gridsize
+	if len(world[xi]) < yi+1 {
+		return false
+	}
+
+	shift := uint((x%gridsize)*gridsize + (y % gridsize))
+
+	return world[xi][yi][d]&(1<<shift) > 0
 }
 
-func (p position) Key() positionKey {
-	return positionKey(p)
+func visit(world worldgrid, x, y int) worldgrid {
+	d := 0
+	if x < 0 {
+		d++
+		x *= -1
+	}
+	if y < 0 {
+		d += 2
+		y *= -1
+	}
+
+	xi := x / gridsize
+	for i := len(world); i < xi+1; i++ {
+		world = append(world, make([][4]uint64, 0, maxcap))
+	}
+
+	yi := y / gridsize
+	for i := len(world[xi]); i < yi+1; i++ {
+		world[xi] = append(world[xi], [4]uint64{})
+	}
+
+	shift := uint((x%gridsize)*gridsize + (y % gridsize))
+
+	world[xi][yi][d] |= (1 << shift)
+	return world
 }
+
+func main() {}

@@ -8,17 +8,17 @@ import (
 func BenchmarkUniqueLocations(b *testing.B) {
 	b.StopTimer()
 	var input []byte
-	for n := 0; n < 5000; n++ {
+	for n := 0; n < 8000; n++ {
 		input = append(input, byte(randomDirection()))
 	}
+	inputstr := string(input)
 	b.StartTimer()
 
-	b.Run("Find Unique Locations", func(b *testing.B) {
+	b.Run("Using Grid", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
-			uniqueLocations(string(input))
+			uniqueLocationsGrid(inputstr)
 		}
 	})
-
 }
 
 func randomDirection() rune {
