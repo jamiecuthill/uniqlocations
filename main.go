@@ -11,14 +11,13 @@ type worldgrid [][][4]uint64
 func uniqueLocationsGrid(input string) int {
 	var x, y, visited int
 	var world = make(worldgrid, 0, maxcap)
+	var ok bool
 
 	for _, direction := range input {
 		move(direction, &x, &y)
-		if exists(world, x, y) {
-			continue
+		if world, ok = exists(world, x, y); !ok {
+			visited++
 		}
-		visited++
-		world = visit(world, x, y)
 	}
 
 	return visited
@@ -43,33 +42,7 @@ func move(direction rune, x *int, y *int) {
 	}
 }
 
-func exists(world worldgrid, x, y int) bool {
-	d := 0
-	if x < 0 {
-		d++
-		x *= -1
-	}
-	if y < 0 {
-		d += 2
-		y *= -1
-	}
-
-	xi := x / gridsize
-	if len(world) < xi+1 {
-		return false
-	}
-
-	yi := y / gridsize
-	if len(world[xi]) < yi+1 {
-		return false
-	}
-
-	shift := uint((x&(gridsize-1))*gridsize + (y & (gridsize - 1)))
-
-	return world[xi][yi][d]&(1<<shift) > 0
-}
-
-func visit(world worldgrid, x, y int) worldgrid {
+func exists(world worldgrid, x, y int) (worldgrid, bool) {
 	d := 0
 	if x < 0 {
 		d++
@@ -92,8 +65,11 @@ func visit(world worldgrid, x, y int) worldgrid {
 
 	shift := uint((x&(gridsize-1))*gridsize + (y & (gridsize - 1)))
 
+	if world[xi][yi][d]&(1<<shift) > 0 {
+		return world, true
+	}
 	world[xi][yi][d] |= (1 << shift)
-	return world
+	return world, false
 }
 
 func main() {}
