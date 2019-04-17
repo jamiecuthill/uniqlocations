@@ -9,7 +9,8 @@ var FindUniqueLocations = uniqueLocationsGrid
 type worldgrid [][][4]uint64
 
 func uniqueLocationsGrid(input string) int {
-	var x, y, visited int
+	var visited uint64
+	var x, y int32
 	var world = make(worldgrid, 0, maxcap)
 	var ok bool
 
@@ -20,10 +21,10 @@ func uniqueLocationsGrid(input string) int {
 		}
 	}
 
-	return visited
+	return int(visited)
 }
 
-func move(direction rune, x *int, y *int) {
+func move(direction rune, x *int32, y *int32) {
 	switch direction {
 	case 'N':
 		*y++
@@ -36,7 +37,7 @@ func move(direction rune, x *int, y *int) {
 	}
 }
 
-func exists(world worldgrid, x, y int) (worldgrid, bool) {
+func exists(world worldgrid, x, y int32) (worldgrid, bool) {
 	d := 0
 	if x < 0 {
 		d++
@@ -48,21 +49,26 @@ func exists(world worldgrid, x, y int) (worldgrid, bool) {
 	}
 
 	xi := x >> 3
-	for i := len(world); i < xi+1; i++ {
+	for i := int32(len(world)); i < xi+1; i++ {
 		world = append(world, make([][4]uint64, 0, maxcap))
 	}
 
 	yi := y >> 3
-	for i := len(world[xi]); i < yi+1; i++ {
+	for i := int32(len(world[xi])); i < yi+1; i++ {
 		world[xi] = append(world[xi], [4]uint64{})
 	}
 
 	shift := uint((x&(gridsize-1))<<3 + (y & (gridsize - 1)))
 
-	if world[xi][yi][d]&(1<<shift) > 0 {
+	bitmask := uint64(1 << shift)
+
+	// Position has already been visited
+	if world[xi][yi][d]&bitmask > 0 {
 		return world, true
 	}
-	world[xi][yi][d] |= (1 << shift)
+
+	// Register that we've visited this location
+	world[xi][yi][d] |= bitmask
 	return world, false
 }
 
