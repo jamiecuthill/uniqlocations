@@ -24,21 +24,15 @@ func uniqueLocationsGrid(input string) int {
 }
 
 func move(direction rune, x *int, y *int) {
-	if direction == 'N' {
+	switch direction {
+	case 'N':
 		*y++
-		return
-	}
-	if direction == 'E' {
+	case 'E':
 		*x++
-		return
-	}
-	if direction == 'S' {
+	case 'S':
 		*y--
-		return
-	}
-	if direction == 'W' {
+	case 'W':
 		*x--
-		return
 	}
 }
 
@@ -46,24 +40,24 @@ func exists(world worldgrid, x, y int) (worldgrid, bool) {
 	d := 0
 	if x < 0 {
 		d++
-		x *= -1
+		x = -x
 	}
 	if y < 0 {
 		d += 2
-		y *= -1
+		y = -y
 	}
 
-	xi := x / gridsize
+	xi := x >> 3
 	for i := len(world); i < xi+1; i++ {
 		world = append(world, make([][4]uint64, 0, maxcap))
 	}
 
-	yi := y / gridsize
+	yi := y >> 3
 	for i := len(world[xi]); i < yi+1; i++ {
 		world[xi] = append(world[xi], [4]uint64{})
 	}
 
-	shift := uint((x&(gridsize-1))*gridsize + (y & (gridsize - 1)))
+	shift := uint((x&(gridsize-1))<<3 + (y & (gridsize - 1)))
 
 	if world[xi][yi][d]&(1<<shift) > 0 {
 		return world, true

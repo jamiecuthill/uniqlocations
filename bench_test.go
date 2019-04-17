@@ -7,9 +7,9 @@ import (
 
 func BenchmarkUniqueLocations(b *testing.B) {
 	b.StopTimer()
-	var input []byte
-	for n := 0; n < 8000; n++ {
-		input = append(input, byte(randomDirection()))
+	var input []rune
+	for n := 0; n < 8574; n++ {
+		input = append(input, randomDirection())
 	}
 	inputstr := string(input)
 	b.StartTimer()
