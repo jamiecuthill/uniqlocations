@@ -64,7 +64,7 @@ func exists(world worldgrid, x, y int) bool {
 		return false
 	}
 
-	shift := uint((x%gridsize)*gridsize + (y % gridsize))
+	shift := uint((x&(gridsize-1))*gridsize + (y & (gridsize - 1)))
 
 	return world[xi][yi][d]&(1<<shift) > 0
 }
@@ -90,7 +90,7 @@ func visit(world worldgrid, x, y int) worldgrid {
 		world[xi] = append(world[xi], [4]uint64{})
 	}
 
-	shift := uint((x%gridsize)*gridsize + (y % gridsize))
+	shift := uint((x&(gridsize-1))*gridsize + (y & (gridsize - 1)))
 
 	world[xi][yi][d] |= (1 << shift)
 	return world
